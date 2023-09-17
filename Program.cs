@@ -90,14 +90,17 @@ namespace MegaConvert
 
             if(charModeInt == 0)
             {
+                Console.WriteLine("\nSetting charsetMode to Default");
                 rawTimanthes.charsetMode = CharsetMode.Default;
             }
             else if(charModeInt == 1)
             {
+                Console.WriteLine("\nSetting charsetMode to SuperExtendedAttributeMode");
                 rawTimanthes.charsetMode = CharsetMode.SuperExtendedAttributeMode;
             }
             else if(charModeInt == 2)
             {
+                Console.WriteLine("\nSetting charsetMode to NibbleColour");
                 rawTimanthes.charsetMode = CharsetMode.NibbleColour;
             }
 
@@ -121,6 +124,8 @@ namespace MegaConvert
 
             UInt32.TryParse(reducechars, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var reducecharsInt);
             rawTimanthes.reduceChars = reducecharsInt > 0 ? true : false;
+
+            Console.WriteLine("\nSetting reduceChars to %d", rawTimanthes.reduceChars);
 
             rawTimanthes.ReadFile(inputFilename);
 
