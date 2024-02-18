@@ -155,6 +155,8 @@ namespace MegaConvert
             this.chars = new List<ByteBuffer>();
             this.hashes = new List<HashCode>();
 
+            Console.WriteLine("Extracting chars in mode: " + mode);
+
             if (mode == CharsetMode.NibbleColour)
             {
                 for (int row = 0; row < this.heightInChars; row++)
@@ -264,7 +266,7 @@ namespace MegaConvert
                         {
                             if (SameByteBuffer(charBuffer, this.chars[i], 0, 0, 0, 0, 8, 8))
                             {
-                                int j = i + 384; // 384*64 = $6000 is location of charset
+                                int j = i + (int)(charLocation >> 6);
                                 this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = (byte)(j & 255);
                                 this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = (byte)(j >> 8);
                             }

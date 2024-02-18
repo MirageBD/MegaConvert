@@ -125,7 +125,7 @@ namespace MegaConvert
             UInt32.TryParse(reducechars, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var reducecharsInt);
             rawTimanthes.reduceChars = reducecharsInt > 0 ? true : false;
 
-            Console.WriteLine("\nSetting reduceChars to %d", rawTimanthes.reduceChars);
+            Console.WriteLine("\nSetting reduceChars to " + rawTimanthes.reduceChars);
 
             rawTimanthes.ReadFile(inputFilename);
 

@@ -47,6 +47,8 @@ namespace MegaConvert
 			{
 				var layer = rawTimanthes.layers[i];
 
+                Console.WriteLine("layer.restrictmode: " + layer.restrictmode);
+
                 if (layer.restrictmode == 0x17)
 				{
 					var fn2 = fp + "//" + fn + "_cols" + i + ".bin";
