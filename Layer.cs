@@ -159,22 +159,35 @@ namespace MegaConvert
 
             if (mode == CharsetMode.NibbleColour)
             {
-                for (int row = 0; row < this.heightInChars; row++)
+                if (direction == BitmapDirection.CharLeftRightTopBottom)
                 {
-                    for (int column = 0; column < this.widthInChars; column += 2)
+                    for (int row = 0; row < this.heightInChars; row++)
                     {
-                        var charBuffer = new ByteBuffer(8, 8);
-                        CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
-
-                        if (!CharsetContainsChar(charBuffer))
+                        for (int column = 0; column < this.widthInChars; column += 2)
                         {
-                            this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            var charBuffer = new ByteBuffer(8, 8);
+                            CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
+
+                            if (!CharsetContainsChar(charBuffer))
+                            {
+                                this.chars.Add(charBuffer);
+                                this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            }
                         }
                     }
-                }
 
-                Console.WriteLine("\nUnique chars: " + this.chars.Count);
+                    Console.WriteLine("\nUnique chars: " + this.chars.Count);
+                }
+                else if (direction == BitmapDirection.PixelTopBottomLeftRight)
+                {
+                    for (int column = 0; column < this.widthInChars * 8; column += 2)
+                    {
+                        var charBuffer = new ByteBuffer(1, this.heightInChars * 8);
+                        CopyByteBufferNibble(this.byteBuffer, charBuffer, column, 0, 0, 0, 2, this.heightInChars * 8);
+                        this.chars.Add(charBuffer);
+                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                    }
+                }
             }
             else
             {

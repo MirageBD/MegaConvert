@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>./twist.bin cm1:1 d1:1 cl1:10000 rc1:0</StartArguments>
+    <StartArguments>./agony.bin cm1:2 d1:1 cl1:20000 rc1:0</StartArguments>
   </PropertyGroup>
 </Project>
