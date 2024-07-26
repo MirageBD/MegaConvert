@@ -117,6 +117,7 @@ namespace MegaConvert
             this.palBlue = new byte[256];
         }
 
+        /*
         public bool CharsetContainsChar(ByteBuffer bb)
         {
             for(int i=0; i<this.chars.Count; i++)
@@ -127,6 +128,7 @@ namespace MegaConvert
 
             return false;
         }
+        */
 
         public void CompressChars()
         {
@@ -168,15 +170,26 @@ namespace MegaConvert
                             var charBuffer = new ByteBuffer(8, 8);
                             CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
 
-                            if (!CharsetContainsChar(charBuffer))
-                            {
-                                this.chars.Add(charBuffer);
-                                this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
-                            }
+                            this.chars.Add(charBuffer);
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
                         }
                     }
 
-                    Console.WriteLine("\nUnique chars: " + this.chars.Count);
+                    Console.WriteLine("\nchars.Count: " + this.chars.Count);
+                }
+                else if (direction == BitmapDirection.CharTopBottomLeftRight)
+                {
+                    for (int column = 0; column < this.widthInChars; column += 2)
+                    {
+                        for (int row = 0; row < this.heightInChars; row++)
+                        {
+                            var charBuffer = new ByteBuffer(8, 8);
+                            CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
+
+                            this.chars.Add(charBuffer);
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                        }
+                    }
                 }
                 else if (direction == BitmapDirection.PixelTopBottomLeftRight)
                 {
@@ -184,9 +197,14 @@ namespace MegaConvert
                     {
                         var charBuffer = new ByteBuffer(1, this.heightInChars * 8);
                         CopyByteBufferNibble(this.byteBuffer, charBuffer, column, 0, 0, 0, 2, this.heightInChars * 8);
+
                         this.chars.Add(charBuffer);
                         this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
                     }
+                }
+                else
+                {
+                    Console.WriteLine("NibbleColour direction not implemented: " + direction);
                 }
             }
             else
@@ -205,7 +223,7 @@ namespace MegaConvert
                         }
                     }
 
-                    Console.WriteLine("\nUnique chars: " + this.chars.Count);
+                    Console.WriteLine("\nchars.Count: " + this.chars.Count);
                 }
                 else if (direction == BitmapDirection.CharTopBottomLeftRight)
                 {
@@ -251,6 +269,31 @@ namespace MegaConvert
                             this.chars.Add(charBuffer);
                             this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
                         }
+                    }
+                }
+            }
+        }
+
+        public void ConstructScreen(CharsetMode mode, UInt32 charLocation)
+        {
+            float charWidth = 1;
+            if (mode == CharsetMode.SuperExtendedAttributeMode)
+                charWidth = 2;
+            else if (mode == CharsetMode.NibbleColour)
+                charWidth = 1;
+
+            this.screen = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
+
+            if (mode == CharsetMode.NibbleColour)
+            {
+                for (int row = 0; row < this.heightInChars; row++)
+                {
+                    for (int column = 0; column < this.widthInChars; column += 2)
+                    {
+                        int j = (int)(charLocation >> 6) + row * (this.widthInChars / 2) + (column / 2);
+
+                        this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = (byte)(j & 255);
+                        this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = (byte)(j >> 8);
                     }
                 }
             }

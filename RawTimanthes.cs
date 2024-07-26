@@ -55,9 +55,14 @@ namespace MegaConvert
                     this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
 
                 this.layers[layer].ExtractChars(direction, charsetMode);
+                
                 if (reduceChars)
                     this.layers[layer].CompressChars();
-                this.layers[layer].ExtractScreen(charsetMode, charLocation);
+
+                if (reduceChars)
+                    this.layers[layer].ExtractScreen(charsetMode, charLocation);
+                else
+                    this.layers[layer].ConstructScreen(charsetMode, charLocation);
 
                 this.layers[layer].ExtractAttributes();
             }

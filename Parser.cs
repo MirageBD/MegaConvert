@@ -62,7 +62,7 @@ namespace MegaConvert
                     }
                     file.Close();
                 }
-                else if(layer.restrictmode == 0x09)
+                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a)
 				{
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
