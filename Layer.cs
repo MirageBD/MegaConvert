@@ -393,7 +393,7 @@ namespace MegaConvert
                 {
                     var srcByte1 = src.data[(y + srcy) * src.width + srcx + 2 * x + 0];
                     var srcByte2 = src.data[(y + srcy) * src.width + srcx + 2 * x + 1];
-                    var combined = (byte)(srcByte2 << 4 | srcByte1);
+                    var combined = (byte)((srcByte2 & 0x0f) << 4 | (srcByte1 & 0x0f));
                     dst.data[(y + dsty) * dst.width + x + dstx] = combined;
                 }
             }
