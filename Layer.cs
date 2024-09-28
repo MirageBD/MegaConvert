@@ -359,16 +359,18 @@ namespace MegaConvert
 
         public void ExtractAttributes()
         {
-            this.colours = new ByteBuffer((int)(2 * this.widthInChars), this.heightInChars);
+            // LV NOTE - THIS ONLY WORKS FOR NCM AT THE MOMENT!!!
+
+            this.colours = new ByteBuffer((int)(this.widthInChars), this.heightInChars);
 
             for (int row = 0; row < this.heightInChars; row++)
             {
-                for (int column = 0; column < this.widthInChars; column++)
+                for (int column = 0; column < this.widthInChars; column += 2)
                 {
-                    this.colours.data[(int)(row * 2 * this.widthInChars + column * 2 + 0)] = 0;
+                    this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM
 
-                    this.colours.data[(int)(row * 2 * this.widthInChars + column * 2 + 1)] =
-                        this.byteBuffer.data[row * 64 * widthInChars + column * 8];
+                    var b = GetByteFromByteBuffer(this.byteBuffer, column * 8, row * 8);
+                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = (byte)((b >> 4) <<4);
                 }
             }
         }
@@ -397,6 +399,12 @@ namespace MegaConvert
                     dst.data[(y + dsty) * dst.width + x + dstx] = combined;
                 }
             }
+        }
+
+        public static byte GetByteFromByteBuffer(ByteBuffer src, int srcx, int srcy)
+        {
+            var srcByte1 = src.data[srcy * src.width + srcx];
+            return srcByte1;
         }
 
         public static bool SameByteBuffer(ByteBuffer src, ByteBuffer dst, int srcx, int srcy, int dstx, int dsty, int w, int h)

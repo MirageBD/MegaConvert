@@ -62,7 +62,7 @@ namespace MegaConvert
                     }
                     file.Close();
                 }
-                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a)
+                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a) // FCM or NCM
 				{
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
@@ -91,6 +91,20 @@ namespace MegaConvert
                         file.WriteByte((byte)(screen.data[x]));
                     }
                     file.Close();
+
+                    if(layer.restrictmode == 0x0a)
+                    {
+                        fn2 = fp + "//" + fn + "_attrib" + i + ".bin";
+                        Console.WriteLine(fn2);
+                        File.Delete(fn2);
+                        file = File.OpenWrite(fn2);
+                        var colours = rawTimanthes.layers[i].colours;
+                        for (int x = 0; x < colours.data.Length; x++)
+                        {
+                            file.WriteByte((byte)(colours.data[x]));
+                        }
+                        file.Close();
+                    }
 
                     fn2 = fp + "//" + fn + "_pal" + i + ".bin";
                     Console.WriteLine(fn2);
