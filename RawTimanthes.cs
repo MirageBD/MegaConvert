@@ -42,29 +42,65 @@ namespace MegaConvert
 
             for (int layer = 0; layer < numLayers; layer++)
             {
-                for(int i=0; i< paletteSize; i++)
-                    this.layers[layer].palRed[i] = fileBytes[walker++];
+                if (this.charsetMode == CharsetMode.NibbleColour512)
+                {
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palRed[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palGreen[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palBlue[i] = fileBytes[walker++];
 
-                for (int i = 0; i < paletteSize; i++)
-                    this.layers[layer].palGreen[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].pal2Red[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].pal2Green[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].pal2Blue[i] = fileBytes[walker++];
 
-                for (int i = 0; i < paletteSize; i++)
-                    this.layers[layer].palBlue[i] = fileBytes[walker++];
+                    for (int offset = 0; offset < (width * height); offset++)
+                    {
+                        this.layers[layer].byteBufferHi.data[offset] = fileBytes[walker++];
+                        this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
+                    }
 
-                for (int offset = 0; offset < (width * height); offset++)
-                    this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
+                    this.layers[layer].ExtractChars(direction, charsetMode);
 
-                this.layers[layer].ExtractChars(direction, charsetMode);
-                
-                if (reduceChars)
-                    this.layers[layer].CompressChars();
+                    if (reduceChars)
+                        this.layers[layer].CompressChars();
 
-                if (reduceChars)
-                    this.layers[layer].ExtractScreen(charsetMode, charLocation);
+                    if (reduceChars)
+                        this.layers[layer].ExtractScreen(charsetMode, charLocation);
+                    else
+                        this.layers[layer].ConstructScreen(charsetMode, charLocation);
+
+                    this.layers[layer].ExtractAttributes512();
+
+                    Console.WriteLine("DONE");
+                }
                 else
-                    this.layers[layer].ConstructScreen(charsetMode, charLocation);
+                {
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palRed[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palGreen[i] = fileBytes[walker++];
+                    for (int i = 0; i < paletteSize; i++)
+                        this.layers[layer].palBlue[i] = fileBytes[walker++];
+                    for (int offset = 0; offset < (width * height); offset++)
+                        this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
 
-                this.layers[layer].ExtractAttributes();
+                    this.layers[layer].ExtractChars(direction, charsetMode);
+
+                    if (reduceChars)
+                        this.layers[layer].CompressChars();
+
+                    if (reduceChars)
+                        this.layers[layer].ExtractScreen(charsetMode, charLocation);
+                    else
+                        this.layers[layer].ConstructScreen(charsetMode, charLocation);
+
+                    this.layers[layer].ExtractAttributes();
+                }
             }
         }
     }

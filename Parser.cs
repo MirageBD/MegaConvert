@@ -62,7 +62,7 @@ namespace MegaConvert
                     }
                     file.Close();
                 }
-                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a) // FCM or NCM
+                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // FCM or NCM or NCM512
 				{
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
@@ -92,7 +92,7 @@ namespace MegaConvert
                     }
                     file.Close();
 
-                    if(layer.restrictmode == 0x0a)
+                    if(layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // 0x8a = 512 colour nybble mode
                     {
                         fn2 = fp + "//" + fn + "_attrib" + i + ".bin";
                         Console.WriteLine(fn2);
@@ -116,6 +116,18 @@ namespace MegaConvert
                         file.WriteByte(ReverseNibble(layer.palGreen[x]));
                     for (int x = 0; x < 256; x++)
                         file.WriteByte(ReverseNibble(layer.palBlue[x]));
+                    file.Close();
+
+                    fn2 = fp + "//" + fn + "_pal2" + i + ".bin";
+                    Console.WriteLine(fn2);
+                    File.Delete(fn2);
+                    file = File.OpenWrite(fn2);
+                    for (int x = 0; x < 256; x++)
+                        file.WriteByte(ReverseNibble(layer.pal2Red[x]));
+                    for (int x = 0; x < 256; x++)
+                        file.WriteByte(ReverseNibble(layer.pal2Green[x]));
+                    for (int x = 0; x < 256; x++)
+                        file.WriteByte(ReverseNibble(layer.pal2Blue[x]));
                     file.Close();
 
                     fn2 = fp + "//" + fn + "_sprites" + i + ".bin";
@@ -158,6 +170,10 @@ namespace MegaConvert
                     }
 
                     file.Close();
+                }
+                else
+                {
+                    Console.WriteLine("ERROR - UNRECOGNIZED RESTRICT MODE: " + layer.restrictmode);
                 }
             }
 

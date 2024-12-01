@@ -83,7 +83,8 @@ namespace MegaConvert
     {
         Default = 0,
         SuperExtendedAttributeMode = 1,
-        NibbleColour = 2
+        NibbleColour = 2,
+        NibbleColour512 = 3
     }
 
     public enum SpriteMode
@@ -97,6 +98,7 @@ namespace MegaConvert
     {
         public byte restrictmode;
         public ByteBuffer byteBuffer;
+        public ByteBuffer byteBufferHi;
         public List<ByteBuffer> chars;
         public List<HashCode> hashes;
         public ByteBuffer screen;
@@ -104,6 +106,9 @@ namespace MegaConvert
         public byte[] palRed = null;
         public byte[] palGreen = null;
         public byte[] palBlue = null;
+        public byte[] pal2Red = null;
+        public byte[] pal2Green = null;
+        public byte[] pal2Blue = null;
         public int widthInChars;
         public int heightInChars;
 
@@ -112,9 +117,13 @@ namespace MegaConvert
             this.widthInChars = (w >> 3);
             this.heightInChars = (h >> 3);
             this.byteBuffer = new ByteBuffer(w, h);
+            this.byteBufferHi = new ByteBuffer(w, h);
             this.palRed = new byte[256];
             this.palGreen = new byte[256];
             this.palBlue = new byte[256];
+            this.pal2Red = new byte[256];
+            this.pal2Green = new byte[256];
+            this.pal2Blue = new byte[256];
         }
 
         /*
@@ -159,7 +168,7 @@ namespace MegaConvert
 
             Console.WriteLine("Extracting chars in mode: " + mode);
 
-            if (mode == CharsetMode.NibbleColour)
+            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
             {
                 if (direction == BitmapDirection.CharLeftRightTopBottom)
                 {
@@ -279,12 +288,12 @@ namespace MegaConvert
             float charWidth = 1;
             if (mode == CharsetMode.SuperExtendedAttributeMode)
                 charWidth = 2;
-            else if (mode == CharsetMode.NibbleColour)
+            else if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
                 charWidth = 1;
 
             this.screen = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
 
-            if (mode == CharsetMode.NibbleColour)
+            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
             {
                 for (int row = 0; row < this.heightInChars; row++)
                 {
@@ -304,12 +313,12 @@ namespace MegaConvert
             float charWidth = 1;
             if (mode == CharsetMode.SuperExtendedAttributeMode)
                 charWidth = 2;
-            else if (mode == CharsetMode.NibbleColour)
+            else if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
                 charWidth = 1;
 
             this.screen = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
 
-            if (mode == CharsetMode.NibbleColour)
+            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
             {
                 for (int row = 0; row < this.heightInChars; row++)
                 {
@@ -357,6 +366,28 @@ namespace MegaConvert
             }
         }
 
+        public void ExtractAttributes512()
+        {
+            // LV NOTE - THIS ONLY WORKS FOR NCM AT THE MOMENT!!!
+
+            this.colours = new ByteBuffer((int)(this.widthInChars), this.heightInChars);
+
+            for (int row = 0; row < this.heightInChars; row++)
+            {
+                for (int column = 0; column < this.widthInChars; column += 2)
+                {
+                    var b = GetByteFromByteBuffer(this.byteBufferHi, column * 8, row * 8);
+                    byte attr = (byte)((b << 4) | 0x0f); // 0x0f for transparency?
+
+                    if (b > 15)
+                        attr |= 0b01100000; // bold+reverse = alt palette
+
+                    this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM;
+                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = attr;
+                }
+            }
+        }
+
         public void ExtractAttributes()
         {
             // LV NOTE - THIS ONLY WORKS FOR NCM AT THE MOMENT!!!
@@ -370,7 +401,7 @@ namespace MegaConvert
                     this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM
 
                     var b = GetByteFromByteBuffer(this.byteBuffer, column * 8, row * 8);
-                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = (byte)((b >> 4) <<4);
+                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = (byte)(((b >> 4) << 4) | 0x0f); // 0x0f for transparency?
                 }
             }
         }
@@ -395,6 +426,20 @@ namespace MegaConvert
                 {
                     var srcByte1 = src.data[(y + srcy) * src.width + srcx + 2 * x + 0];
                     var srcByte2 = src.data[(y + srcy) * src.width + srcx + 2 * x + 1];
+                    var combined = (byte)((srcByte2 & 0x0f) << 4 | (srcByte1 & 0x0f));
+                    dst.data[(y + dsty) * dst.width + x + dstx] = combined;
+                }
+            }
+        }
+
+        public static void CopyByteBufferNibble512(ByteBuffer src, ByteBuffer dst, int srcx, int srcy, int dstx, int dsty, int w, int h)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w / 2; x++)
+                {
+                    var srcByte1 = src.data[(y + srcy) * src.width + srcx + 4 * x + 1];
+                    var srcByte2 = src.data[(y + srcy) * src.width + srcx + 4 * x + 3];
                     var combined = (byte)((srcByte2 & 0x0f) << 4 | (srcByte1 & 0x0f));
                     dst.data[(y + dsty) * dst.width + x + dstx] = combined;
                 }

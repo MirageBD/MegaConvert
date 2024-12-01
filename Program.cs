@@ -25,6 +25,7 @@ namespace MegaConvert
                 Console.WriteLine("           0 = Default");
                 Console.WriteLine("           1 = SuperExtendedAttributeMode");
                 Console.WriteLine("           2 = NibbleColour");
+                Console.WriteLine("           3 = NibbleColour512");
                 Console.WriteLine("    cl1:character location (hex)");
                 Console.WriteLine("           E.G. cl1:2a000");
                 Console.WriteLine("    rc1:reduce chars");
@@ -102,6 +103,11 @@ namespace MegaConvert
             {
                 Console.WriteLine("\nSetting charsetMode to NibbleColour");
                 rawTimanthes.charsetMode = CharsetMode.NibbleColour;
+            }
+            else if (charModeInt == 3)
+            {
+                Console.WriteLine("\nSetting charsetMode to NibbleColour512");
+                rawTimanthes.charsetMode = CharsetMode.NibbleColour512;
             }
 
             int.TryParse(spritemode, out var spriteModeInt);
