@@ -10,7 +10,9 @@ namespace MegaConvert
 
 		public string fileName;
 		public string filePath;
-		public Parser()
+        public string outputFilePath;
+
+        public Parser()
 		{
 		}
 
@@ -32,6 +34,9 @@ namespace MegaConvert
 
             string fn = this.fileName;
 			string fp = this.filePath;
+
+            if (!string.IsNullOrEmpty(this.outputFilePath))
+                fp = this.outputFilePath;
 
             if (!String.IsNullOrEmpty(fp))
             {

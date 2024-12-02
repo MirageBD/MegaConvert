@@ -15,6 +15,7 @@ namespace MegaConvert
             if (args.Length == 0)
             {
                 Console.WriteLine("Usage: MegaConvert input.bin");
+                Console.WriteLine("    of1:output folder");
                 Console.WriteLine("    d1:direction");
                 Console.WriteLine("           0 = CharLeftRightTopBottom");
                 Console.WriteLine("           1 = PixelTopBottomLeftRight");
@@ -44,11 +45,13 @@ namespace MegaConvert
             var charmode = args.SingleOrDefault(arg => arg.StartsWith("cm1:"));
             var spritemode = args.SingleOrDefault(arg => arg.StartsWith("sm1:"));
             var charLocation = args.SingleOrDefault(arg => arg.StartsWith("cl1:"));
+            var outputFolder = args.SingleOrDefault(arg => arg.StartsWith("of1:"));
             var reducechars = args.SingleOrDefault(arg => arg.StartsWith("rc1:"));
             if (!string.IsNullOrEmpty(direction)) { direction = direction.Replace("d1:", ""); }
             if (!string.IsNullOrEmpty(charmode)) { charmode = charmode.Replace("cm1:", ""); }
             if (!string.IsNullOrEmpty(spritemode)) { spritemode = spritemode.Replace("sm1:", ""); }
             if (!string.IsNullOrEmpty(charLocation)) { charLocation = charLocation.Replace("cl1:", ""); }
+            if (!string.IsNullOrEmpty(outputFolder)) { outputFolder = outputFolder.Replace("of1:", ""); }
             if (!string.IsNullOrEmpty(reducechars)) { reducechars = reducechars.Replace("rc1:", ""); }
 
             RawTimanthes rawTimanthes = new RawTimanthes();
@@ -138,6 +141,7 @@ namespace MegaConvert
             Parser parser = new Parser();
             parser.fileName = Path.GetFileNameWithoutExtension(inputFilename);
             parser.filePath = Path.GetDirectoryName(inputFilename);
+            parser.outputFilePath = outputFolder;
 
             parser.Parse(rawTimanthes);
             parser.WriteFiles();
