@@ -75,8 +75,6 @@ namespace MegaConvert
                         this.layers[layer].ConstructScreen(charsetMode, charLocation);
 
                     this.layers[layer].ExtractAttributes512();
-
-                    Console.WriteLine("DONE");
                 }
                 else
                 {
@@ -86,6 +84,7 @@ namespace MegaConvert
                         this.layers[layer].palGreen[i] = fileBytes[walker++];
                     for (int i = 0; i < paletteSize; i++)
                         this.layers[layer].palBlue[i] = fileBytes[walker++];
+
                     for (int offset = 0; offset < (width * height); offset++)
                         this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
 

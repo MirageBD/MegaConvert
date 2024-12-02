@@ -311,14 +311,38 @@ namespace MegaConvert
         public void ExtractScreen(CharsetMode mode, UInt32 charLocation)
         {
             float charWidth = 1;
-            if (mode == CharsetMode.SuperExtendedAttributeMode)
+            if (mode == CharsetMode.SuperExtendedAttributeMode || mode == CharsetMode.NibbleColour512)
                 charWidth = 2;
-            else if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
+            else if (mode == CharsetMode.NibbleColour)
                 charWidth = 1;
 
             this.screen = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
 
-            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
+            if (mode == CharsetMode.NibbleColour512)
+            {
+                for (int row = 0; row < this.heightInChars; row++)
+                {
+                    for (int column = 0; column < this.widthInChars; column += 2)
+                    {
+                        var charBuffer = new ByteBuffer(8, 8);
+                        CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
+
+                        for (int i = 0; i < this.chars.Count; i++)
+                        {
+                            if (SameByteBuffer(charBuffer, this.chars[i], 0, 0, 0, 0, 8, 8))
+                            {
+                                int j = i + (int)(charLocation >> 6);
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = (byte)((column * 8) & 0xff);
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = (byte)((column * 8) >> 8);
+
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 2)] = (byte)(j & 255);
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 3)] = (byte)(j >> 8);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (mode == CharsetMode.NibbleColour)
             {
                 for (int row = 0; row < this.heightInChars; row++)
                 {
@@ -370,20 +394,25 @@ namespace MegaConvert
         {
             // LV NOTE - THIS ONLY WORKS FOR NCM AT THE MOMENT!!!
 
-            this.colours = new ByteBuffer((int)(this.widthInChars), this.heightInChars);
+            float charWidth = 2;
+
+            this.colours = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
 
             for (int row = 0; row < this.heightInChars; row++)
             {
                 for (int column = 0; column < this.widthInChars; column += 2)
                 {
                     var b = GetByteFromByteBuffer(this.byteBufferHi, column * 8, row * 8);
-                    byte attr = (byte)((b << 4) | 0x0f); // 0x0f for transparency?
+                    byte attr = 0b00000000;
 
                     if (b > 15)
                         attr |= 0b01100000; // bold+reverse = alt palette
 
-                    this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM;
-                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = attr;
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = 0b00010000; // GOTOX;
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = attr;
+
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 2)] = 0x08; // 8 = NCM;
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 3)] = (byte)((b << 4) | 0x0f);
                 }
             }
         }
@@ -398,10 +427,9 @@ namespace MegaConvert
             {
                 for (int column = 0; column < this.widthInChars; column += 2)
                 {
-                    this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM
-
                     var b = GetByteFromByteBuffer(this.byteBuffer, column * 8, row * 8);
-                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = (byte)(((b >> 4) << 4) | 0x0f); // 0x0f for transparency?
+                    this.colours.data[(int)(row * this.widthInChars + column + 0)] = 0x08; // 8 = NCM
+                    this.colours.data[(int)(row * this.widthInChars + column + 1)] = (byte)(((b >> 4) << 4) | 0x0f); // 0x0f so palette entry 15 takes on colour 15
                 }
             }
         }
