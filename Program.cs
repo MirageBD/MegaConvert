@@ -117,14 +117,17 @@ namespace MegaConvert
 
             if (spriteModeInt == 0)
             {
+                Console.WriteLine("\nSetting spriteMode to Default");
                 rawTimanthes.spriteMode =SpriteMode.Default;
             }
             else if (spriteModeInt == 1)
             {
+                Console.WriteLine("\nSetting spriteMode to Colour256");
                 rawTimanthes.spriteMode = SpriteMode.Colour256;
             }
             else if (spriteModeInt == 2)
             {
+                Console.WriteLine("\nSetting spriteMode to Colour16");
                 rawTimanthes.spriteMode = SpriteMode.Colour16;
             }
 
