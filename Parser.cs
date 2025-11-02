@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace MegaConvert
 {
@@ -54,9 +55,28 @@ namespace MegaConvert
 
                 Console.WriteLine("layer.restrictmode: " + layer.restrictmode);
 
-                if (layer.restrictmode == 0x17)
-				{
-					var fn2 = fp + "//" + fn + "_cols" + i + ".bin";
+                if (layer.restrictmode == 0x03)
+                {
+                    var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
+                    Console.WriteLine(fn2);
+                    File.Delete(fn2);
+                    file = File.OpenWrite(fn2);
+                    var chars = rawTimanthes.layers[i].chars;
+                    foreach (var c in chars)
+                    {
+                        for (int y = 0; y < c.height; y++)
+                        {
+                            for (int x = 0; x < c.width; x++)
+                            {
+                                file.WriteByte((byte)(c.data[y * c.width + x]));
+                            }
+                        }
+                    }
+                    file.Close();
+                }
+                else if (layer.restrictmode == 0x17)
+                {
+                    var fn2 = fp + "//" + fn + "_cols" + i + ".bin";
                     Console.WriteLine(fn2);
                     File.Delete(fn2);
                     file = File.OpenWrite(fn2);
@@ -67,8 +87,8 @@ namespace MegaConvert
                     }
                     file.Close();
                 }
-                else if(layer.restrictmode == 0x09 || layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // FCM or NCM or NCM512
-				{
+                else if (layer.restrictmode == 0x09 || layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // FCM or NCM or NCM512
+                {
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
                     File.Delete(fn2);
@@ -86,7 +106,7 @@ namespace MegaConvert
                     }
                     file.Close();
 
-					fn2 = fp + "//" + fn + "_screen" + i + ".bin";
+                    fn2 = fp + "//" + fn + "_screen" + i + ".bin";
                     Console.WriteLine(fn2);
                     File.Delete(fn2);
                     file = File.OpenWrite(fn2);
@@ -97,7 +117,7 @@ namespace MegaConvert
                     }
                     file.Close();
 
-                    if(layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // 0x8a = 512 colour nybble mode
+                    if (layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // 0x8a = 512 colour nybble mode
                     {
                         fn2 = fp + "//" + fn + "_attrib" + i + ".bin";
                         Console.WriteLine(fn2);

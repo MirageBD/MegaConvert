@@ -76,7 +76,7 @@ namespace MegaConvert
 
                     this.layers[layer].ExtractAttributes512();
                 }
-                else
+                else // NibbleColour / FCM / Hires
                 {
                     for (int i = 0; i < paletteSize; i++)
                         this.layers[layer].palRed[i] = fileBytes[walker++];

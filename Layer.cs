@@ -21,14 +21,14 @@ namespace MegaConvert
     {
         public ulong[] hashes = new ulong[8];
 
-        public static HashCode FromByteBuffer(ByteBuffer bb)
+        public static HashCode FromByteBuffer(ByteBuffer bb, int w, int h)
         {
             var hash = new HashCode();
 
-            for(int y = 0; y<8; y++)
+            for(int y = 0; y<h; y++)
             {
                 ulong hashRow = 0;
-                for (int x = 0; x < 8; x++)
+                for (int x = 0; x < w; x++)
                 {
                     hashRow += ((ulong)bb.data[y * 8 + x]) << x;
                 }
@@ -84,7 +84,8 @@ namespace MegaConvert
         Default = 0,
         SuperExtendedAttributeMode = 1,
         NibbleColour = 2,
-        NibbleColour512 = 3
+        NibbleColour512 = 3,
+        Bitplane = 4
     }
 
     public enum SpriteMode
@@ -168,7 +169,27 @@ namespace MegaConvert
 
             Console.WriteLine("Extracting chars in mode: " + mode);
 
-            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
+            if (mode == CharsetMode.Bitplane)
+            {
+                if (direction == BitmapDirection.CharLeftRightTopBottom)
+                {
+                    for (int row = 0; row < this.heightInChars; row++)
+                    {
+                        for (int column = 0; column < this.widthInChars; column++)
+                        {
+                            var charBuffer = new ByteBuffer(1, 8);
+                            CopyByteBufferHiresChar(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 8, 8);
+                            this.chars.Add(charBuffer);
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 1));
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nBitplane mode other than BitmapDirection.CharLeftRightTopBottom not implemented");
+                }
+            }
+            else if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
             {
                 if (direction == BitmapDirection.CharLeftRightTopBottom)
                 {
@@ -180,7 +201,7 @@ namespace MegaConvert
                             CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
 
                             this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                         }
                     }
 
@@ -196,7 +217,7 @@ namespace MegaConvert
                             CopyByteBufferNibble(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
 
                             this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                         }
                     }
                 }
@@ -208,7 +229,7 @@ namespace MegaConvert
                         CopyByteBufferNibble(this.byteBuffer, charBuffer, column, 0, 0, 0, 2, this.heightInChars * 8);
 
                         this.chars.Add(charBuffer);
-                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                     }
                 }
                 else
@@ -216,7 +237,7 @@ namespace MegaConvert
                     Console.WriteLine("NibbleColour direction not implemented: " + direction);
                 }
             }
-            else
+            else // FCM
             {
                 if (direction == BitmapDirection.CharLeftRightTopBottom)
                 {
@@ -228,7 +249,7 @@ namespace MegaConvert
                             CopyByteBuffer(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 8, 8);
 
                             this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                         }
                     }
 
@@ -243,7 +264,7 @@ namespace MegaConvert
                             var charBuffer = new ByteBuffer(8, 8);
                             CopyByteBuffer(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 8, 8);
                             this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                         }
                     }
                 }
@@ -254,7 +275,7 @@ namespace MegaConvert
                         var charBuffer = new ByteBuffer(1, this.heightInChars * 8);
                         CopyByteBuffer(this.byteBuffer, charBuffer, column, 0, 0, 0, 1, this.heightInChars * 8);
                         this.chars.Add(charBuffer);
-                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                     }
                 }
                 else if (direction == BitmapDirection.PixelLeftRightTopBottom)
@@ -264,7 +285,7 @@ namespace MegaConvert
                         var charBuffer = new ByteBuffer(1, this.widthInChars * 8);
                         CopyByteBuffer(this.byteBuffer, charBuffer, 0, row, 0, 0, this.widthInChars * 8, 1);
                         this.chars.Add(charBuffer);
-                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                        this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                     }
                 }
                 else if (direction == BitmapDirection.Other)
@@ -276,7 +297,7 @@ namespace MegaConvert
                             var charBuffer = new ByteBuffer(1, this.widthInChars * 8);
                             CopyByteBuffer(this.byteBuffer, charBuffer, 0, row, 0, 0, this.widthInChars * 8, 1);
                             this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer));
+                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 8));
                         }
                     }
                 }
@@ -318,7 +339,28 @@ namespace MegaConvert
 
             this.screen = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
 
-            if (mode == CharsetMode.NibbleColour512)
+            /*
+            if (mode == CharsetMode.Bitplane)
+            {
+                for (int row = 0; row < this.heightInChars; row++)
+                {
+                    for (int column = 0; column < this.widthInChars; column += 2)
+                    {
+                        var charBuffer = new ByteBuffer(8, 8);
+                        CopyByteBufferHiresChar(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 8, 8);
+                        for (int i = 0; i < this.chars.Count; i++)
+                        {
+                            if (SameByteBuffer(charBuffer, this.chars[i], 0, 0, 0, 0, 8, 8))
+                            {
+                                int j = i + (int)(charLocation >> 6);
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = (byte)(j & 255);
+                                this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = (byte)(j >> 8);
+                            }
+                        }
+                    }
+                }
+            }
+            else */if (mode == CharsetMode.NibbleColour512)
             {
                 for (int row = 0; row < this.heightInChars; row++)
                 {
@@ -363,7 +405,7 @@ namespace MegaConvert
                     }
                 }
             }
-            else
+            else // FCM
             {
                 for (int row = 0; row < this.heightInChars; row++)
                 {
@@ -375,7 +417,7 @@ namespace MegaConvert
                             {
                                 if (mode == CharsetMode.SuperExtendedAttributeMode)
                                 {
-                                    int j = i + (int)(charLocation>>6);
+                                    int j = i + (int)(charLocation >> 6);
                                     this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = (byte)(j & 255);
                                     this.screen.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = (byte)(j >> 8);
                                 }
@@ -460,6 +502,33 @@ namespace MegaConvert
             }
         }
 
+        public static void CopyByteBufferHiresChar(ByteBuffer src, ByteBuffer dst, int srcx, int srcy, int dstx, int dsty, int w, int h)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                var srcByte1 = src.data[(y + srcy) * src.width + srcx + 0];
+                var srcByte2 = src.data[(y + srcy) * src.width + srcx + 1];
+                var srcByte3 = src.data[(y + srcy) * src.width + srcx + 2];
+                var srcByte4 = src.data[(y + srcy) * src.width + srcx + 3];
+                var srcByte5 = src.data[(y + srcy) * src.width + srcx + 4];
+                var srcByte6 = src.data[(y + srcy) * src.width + srcx + 5];
+                var srcByte7 = src.data[(y + srcy) * src.width + srcx + 6];
+                var srcByte8 = src.data[(y + srcy) * src.width + srcx + 7];
+                var combined = (byte)(
+                    (srcByte1 & 0x01) << 7 |
+                    (srcByte2 & 0x01) << 6 |
+                    (srcByte3 & 0x01) << 5 |
+                    (srcByte4 & 0x01) << 4 |
+                    (srcByte5 & 0x01) << 3 |
+                    (srcByte6 & 0x01) << 2 |
+                    (srcByte7 & 0x01) << 1 |
+                    (srcByte8 & 0x01) << 0
+                );
+                dst.data[y] = combined;
+            }
+        }
+
+        /*
         public static void CopyByteBufferNibble512(ByteBuffer src, ByteBuffer dst, int srcx, int srcy, int dstx, int dsty, int w, int h)
         {
             for (int y = 0; y < h; y++)
@@ -473,6 +542,7 @@ namespace MegaConvert
                 }
             }
         }
+        */
 
         public static byte GetByteFromByteBuffer(ByteBuffer src, int srcx, int srcy)
         {
