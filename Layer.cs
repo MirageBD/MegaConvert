@@ -476,6 +476,73 @@ namespace MegaConvert
             }
         }
 
+        public void ConvertColoursToAttributes()
+        {
+            // This assumes
+            // mode == CharsetMode.NibbleColour512
+            // direction == BitmapDirection.CharLeftRightTopBottom
+            // for now.
+
+            float charWidth = 2;
+
+            this.colours = new ByteBuffer((int)(this.widthInChars * charWidth), this.heightInChars);
+
+            byte[] colcount = new byte[16];
+
+            for (int row = 0; row < this.heightInChars; row++)
+            {
+                for (int column = 0; column < this.widthInChars; column += 2)
+                {
+                    var charBuffer = new ByteBuffer(16, 8);
+                    CopyByteBuffer(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 16, 8);
+
+                    for(int i=0; i<16; i++)
+                    {
+                        colcount[i] = 0;
+                    }
+
+                    for(int i=0; i<128; i++)
+                    {
+                        var b = charBuffer.data[i];
+                        colcount[b]++;
+                    }
+
+                    int highestColIndex = 0;
+                    for(int i=0; i<16; i++)
+                    {
+                        if (colcount[i] > colcount[highestColIndex])
+                            highestColIndex = i;
+                    }
+
+                    for (int i = 0; i < 128; i++)
+                    {
+                        var b = charBuffer.data[i];
+                        if(b == highestColIndex)
+                            charBuffer.data[i] = 0;
+                    }
+
+                    CopyByteBuffer(charBuffer, this.byteBuffer, 0, 0, column * 8, row * 8, 16, 8);
+
+                    Console.WriteLine($"{row:d2} {column:d2} {highestColIndex:x2}");
+
+                    /*
+                    var b = GetByteFromByteBuffer(this.byteBufferHi, column * 8, row * 8);
+                    byte attr = 0b00000000;
+
+                    if (b > 15)
+                        attr |= 0b01100000; // bold+reverse = alt palette
+
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 0)] = 0b00010000; // GOTOX;
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 1)] = attr;
+
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 2)] = 0x08; // 8 = NCM;
+                    this.colours.data[(int)(row * this.widthInChars * charWidth + column * charWidth + 3)] = (byte)((b << 4) | 0x0f);
+                    */
+                }
+            }
+        }
+
+
         public static void CopyByteBuffer(ByteBuffer src, ByteBuffer dst, int srcx, int srcy, int dstx, int dsty, int w, int h)
         {
             for(int y = 0; y < h; y++)

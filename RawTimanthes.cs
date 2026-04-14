@@ -12,6 +12,7 @@ namespace MegaConvert
         public SpriteMode spriteMode;
         public UInt32 charLocation;
         public bool reduceChars;
+        public bool useattributecolors;
 
         public RawTimanthes()
         {
@@ -63,6 +64,8 @@ namespace MegaConvert
                         this.layers[layer].byteBufferHi.data[offset] = fileBytes[walker++];
                         this.layers[layer].byteBuffer.data[offset] = fileBytes[walker++];
                     }
+
+                    this.layers[layer].ConvertColoursToAttributes();
 
                     this.layers[layer].ExtractChars(direction, charsetMode);
 

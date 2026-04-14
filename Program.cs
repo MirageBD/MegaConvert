@@ -33,6 +33,9 @@ namespace MegaConvert
                 Console.WriteLine("    rc1:reduce chars");
                 Console.WriteLine("           0 = Don't reduce");
                 Console.WriteLine("           1 = Reduce");
+                Console.WriteLine("    ua1:use attributes for colour");
+                Console.WriteLine("           0 = Don't");
+                Console.WriteLine("           1 = Do");
                 Console.WriteLine("    sm1:sprite mode");
                 Console.WriteLine("           0 = Default");
                 Console.WriteLine("           1 = 256 colours");
@@ -48,12 +51,14 @@ namespace MegaConvert
             var charLocation = args.SingleOrDefault(arg => arg.StartsWith("cl1:"));
             var outputFolder = args.SingleOrDefault(arg => arg.StartsWith("of1:"));
             var reducechars = args.SingleOrDefault(arg => arg.StartsWith("rc1:"));
+            var useattributecolors = args.SingleOrDefault(arg => arg.StartsWith("ua1:"));
             if (!string.IsNullOrEmpty(direction)) { direction = direction.Replace("d1:", ""); }
             if (!string.IsNullOrEmpty(charmode)) { charmode = charmode.Replace("cm1:", ""); }
             if (!string.IsNullOrEmpty(spritemode)) { spritemode = spritemode.Replace("sm1:", ""); }
             if (!string.IsNullOrEmpty(charLocation)) { charLocation = charLocation.Replace("cl1:", ""); }
             if (!string.IsNullOrEmpty(outputFolder)) { outputFolder = outputFolder.Replace("of1:", ""); }
             if (!string.IsNullOrEmpty(reducechars)) { reducechars = reducechars.Replace("rc1:", ""); }
+            if (!string.IsNullOrEmpty(useattributecolors)) { useattributecolors = reducechars.Replace("ua1:", ""); }
 
             RawTimanthes rawTimanthes = new RawTimanthes();
 
@@ -142,6 +147,9 @@ namespace MegaConvert
 
             UInt32.TryParse(reducechars, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var reducecharsInt);
             rawTimanthes.reduceChars = reducecharsInt > 0 ? true : false;
+
+            UInt32.TryParse(useattributecolors, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var useattributecolorsInt);
+            rawTimanthes.useattributecolors = useattributecolorsInt > 0 ? true : false;
 
             Console.WriteLine("\nSetting reduceChars to " + rawTimanthes.reduceChars);
 
