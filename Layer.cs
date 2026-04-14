@@ -169,27 +169,7 @@ namespace MegaConvert
 
             Console.WriteLine("Extracting chars in mode: " + mode);
 
-            if (mode == CharsetMode.Bitplane)
-            {
-                if (direction == BitmapDirection.CharLeftRightTopBottom)
-                {
-                    for (int row = 0; row < this.heightInChars; row++)
-                    {
-                        for (int column = 0; column < this.widthInChars; column++)
-                        {
-                            var charBuffer = new ByteBuffer(1, 8);
-                            CopyByteBufferHiresChar(this.byteBuffer, charBuffer, column * 8, row * 8, 0, 0, 8, 8);
-                            this.chars.Add(charBuffer);
-                            this.hashes.Add(HashCode.FromByteBuffer(charBuffer, 8, 1));
-                        }
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("\nBitplane mode other than BitmapDirection.CharLeftRightTopBottom not implemented");
-                }
-            }
-            else if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
+            if (mode == CharsetMode.NibbleColour || mode == CharsetMode.NibbleColour512)
             {
                 if (direction == BitmapDirection.CharLeftRightTopBottom)
                 {

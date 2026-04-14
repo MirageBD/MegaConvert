@@ -55,7 +55,7 @@ namespace MegaConvert
 
                 Console.WriteLine("layer.restrictmode: " + layer.restrictmode);
 
-                if (layer.restrictmode == 0x03)
+                if (layer.restrictmode == 0x03) // bitmap singlecolour/singlecolor
                 {
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
@@ -74,7 +74,7 @@ namespace MegaConvert
                     }
                     file.Close();
                 }
-                else if (layer.restrictmode == 0x17)
+                else if (layer.restrictmode == 0x17) // attribute/colour?
                 {
                     var fn2 = fp + "//" + fn + "_cols" + i + ".bin";
                     Console.WriteLine(fn2);
@@ -89,112 +89,143 @@ namespace MegaConvert
                 }
                 else if (layer.restrictmode == 0x09 || layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // FCM or NCM or NCM512
                 {
-                    var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
-                    Console.WriteLine(fn2);
-                    File.Delete(fn2);
-                    file = File.OpenWrite(fn2);
-                    var chars = rawTimanthes.layers[i].chars;
-                    foreach (var c in chars)
+                    if (layer.restrictmode == 0x09 && rawTimanthes.charsetMode == CharsetMode.Bitplane) // extract bitplanes
                     {
-                        for (int y = 0; y < c.height; y++)
+                        for (int j = 0; j < 8; j++) // 8 bitplanes
                         {
-                            for (int x = 0; x < c.width; x++)
+                            byte mask = (byte)(1 << j); // 1,2,4,8,16,32,64,128
+
+                            var fn2 = fp + "//" + fn + "_bitplane" + i + j + ".bin";
+                            Console.WriteLine(fn2);
+                            File.Delete(fn2);
+                            file = File.OpenWrite(fn2);
+                            var chars = rawTimanthes.layers[i].chars;
+                            foreach (var c in chars)
                             {
-                                file.WriteByte((byte)(c.data[y * c.width + x]));
+                                for (int y = 0; y < c.height; y++)
+                                {
+                                    byte b = 0;
+                                    for (int x = 0; x < c.width; x++)
+                                    {
+                                        byte t = c.data[y * c.width + x]; // palette index 0-255
+                                        t &= mask;
+                                        b += (byte)(t << (7-x));
+                                    }
+                                    file.WriteByte((byte)b);
+                                }
                             }
+                            file.Close();
                         }
                     }
-                    file.Close();
-
-                    fn2 = fp + "//" + fn + "_screen" + i + ".bin";
-                    Console.WriteLine(fn2);
-                    File.Delete(fn2);
-                    file = File.OpenWrite(fn2);
-                    var screen = rawTimanthes.layers[i].screen;
-                    for (int x = 0; x < screen.data.Length; x++)
+                    else
                     {
-                        file.WriteByte((byte)(screen.data[x]));
-                    }
-                    file.Close();
-
-                    if (layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // 0x8a = 512 colour nybble mode
-                    {
-                        fn2 = fp + "//" + fn + "_attrib" + i + ".bin";
+                        var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                         Console.WriteLine(fn2);
                         File.Delete(fn2);
                         file = File.OpenWrite(fn2);
-                        var colours = rawTimanthes.layers[i].colours;
-                        for (int x = 0; x < colours.data.Length; x++)
+                        var chars = rawTimanthes.layers[i].chars;
+                        foreach (var c in chars)
                         {
-                            file.WriteByte((byte)(colours.data[x]));
+                            for (int y = 0; y < c.height; y++)
+                            {
+                                for (int x = 0; x < c.width; x++)
+                                {
+                                    file.WriteByte((byte)(c.data[y * c.width + x]));
+                                }
+                            }
                         }
                         file.Close();
-                    }
 
-                    fn2 = fp + "//" + fn + "_pal" + i + ".bin";
-                    Console.WriteLine(fn2);
-                    File.Delete(fn2);
-                    file = File.OpenWrite(fn2);
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.palRed[x]));
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.palGreen[x]));
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.palBlue[x]));
-                    file.Close();
-
-                    fn2 = fp + "//" + fn + "_pal2" + i + ".bin";
-                    Console.WriteLine(fn2);
-                    File.Delete(fn2);
-                    file = File.OpenWrite(fn2);
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.pal2Red[x]));
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.pal2Green[x]));
-                    for (int x = 0; x < 256; x++)
-                        file.WriteByte(ReverseNibble(layer.pal2Blue[x]));
-                    file.Close();
-
-                    fn2 = fp + "//" + fn + "_sprites" + i + ".bin";
-                    Console.WriteLine(fn2);
-                    File.Delete(fn2);
-                    file = File.OpenWrite(fn2);
-
-                    var bb = rawTimanthes.layers[i].byteBuffer;
-
-                    if (rawTimanthes.spriteMode == SpriteMode.Colour256)
-                    {
-                        for (int spr = 0; spr < bb.width / 16; spr++)
+                        fn2 = fp + "//" + fn + "_screen" + i + ".bin";
+                        Console.WriteLine(fn2);
+                        File.Delete(fn2);
+                        file = File.OpenWrite(fn2);
+                        var screen = rawTimanthes.layers[i].screen;
+                        for (int x = 0; x < screen.data.Length; x++)
                         {
-                            for (int y = 0; y < bb.height; y++)
+                            file.WriteByte((byte)(screen.data[x]));
+                        }
+                        file.Close();
+
+                        if (layer.restrictmode == 0x0a || layer.restrictmode == 0x8a) // 0x8a = 512 colour nybble mode
+                        {
+                            fn2 = fp + "//" + fn + "_attrib" + i + ".bin";
+                            Console.WriteLine(fn2);
+                            File.Delete(fn2);
+                            file = File.OpenWrite(fn2);
+                            var colours = rawTimanthes.layers[i].colours;
+                            for (int x = 0; x < colours.data.Length; x++)
                             {
-                                for (int x = 0; x < 16; x += 2)
+                                file.WriteByte((byte)(colours.data[x]));
+                            }
+                            file.Close();
+                        }
+
+                        fn2 = fp + "//" + fn + "_pal" + i + ".bin";
+                        Console.WriteLine(fn2);
+                        File.Delete(fn2);
+                        file = File.OpenWrite(fn2);
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.palRed[x]));
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.palGreen[x]));
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.palBlue[x]));
+                        file.Close();
+
+                        fn2 = fp + "//" + fn + "_pal2" + i + ".bin";
+                        Console.WriteLine(fn2);
+                        File.Delete(fn2);
+                        file = File.OpenWrite(fn2);
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.pal2Red[x]));
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.pal2Green[x]));
+                        for (int x = 0; x < 256; x++)
+                            file.WriteByte(ReverseNibble(layer.pal2Blue[x]));
+                        file.Close();
+
+                        fn2 = fp + "//" + fn + "_sprites" + i + ".bin";
+                        Console.WriteLine(fn2);
+                        File.Delete(fn2);
+                        file = File.OpenWrite(fn2);
+
+                        var bb = rawTimanthes.layers[i].byteBuffer;
+
+                        if (rawTimanthes.spriteMode == SpriteMode.Colour256)
+                        {
+                            for (int spr = 0; spr < bb.width / 16; spr++)
+                            {
+                                for (int y = 0; y < bb.height; y++)
                                 {
-                                    byte b = (byte)(
-                                                 ((bb.data[y * bb.width + (spr * 16) + x + 0]) << 4) +
-                                                 ((bb.data[y * bb.width + (spr * 16) + x + 1]) << 0)
-                                             );
-                                    file.WriteByte(b);
+                                    for (int x = 0; x < 16; x += 2)
+                                    {
+                                        byte b = (byte)(
+                                                     ((bb.data[y * bb.width + (spr * 16) + x + 0]) << 4) +
+                                                     ((bb.data[y * bb.width + (spr * 16) + x + 1]) << 0)
+                                                 );
+                                        file.WriteByte(b);
+                                    }
                                 }
                             }
                         }
-                    }
-                    else if (rawTimanthes.spriteMode == SpriteMode.Colour16)
-                    {
-                        for (int spr = 0; spr < bb.width / 32; spr++)
+                        else if (rawTimanthes.spriteMode == SpriteMode.Colour16)
                         {
-                            for (int y = 0; y < bb.height; y++)
+                            for (int spr = 0; spr < bb.width / 32; spr++)
                             {
-                                for (int x = 0; x < 32; x++)
+                                for (int y = 0; y < bb.height; y++)
                                 {
-                                    byte b = (byte)(bb.data[y * bb.width + (spr * 32) + x]);
-                                    file.WriteByte(b);
+                                    for (int x = 0; x < 32; x++)
+                                    {
+                                        byte b = (byte)(bb.data[y * bb.width + (spr * 32) + x]);
+                                        file.WriteByte(b);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    file.Close();
+                        file.Close();
+                    }
                 }
                 else
                 {
