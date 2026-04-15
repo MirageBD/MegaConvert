@@ -91,11 +91,15 @@ namespace MegaConvert
                 {
                     if (layer.restrictmode == 0x09 && rawTimanthes.charsetMode == CharsetMode.Bitplane) // extract bitplanes
                     {
-                        for (int j = 0; j < 8; j++) // 8 bitplanes
+                        for (int bp = 0; bp < 8; bp++) // 8 bitplanes
                         {
-                            byte mask = (byte)(1 << j); // 1,2,4,8,16,32,64,128
+                            byte mask = (byte)(1 << bp); // 1,2,4,8,16,32,64,128
 
-                            var fn2 = fp + "//" + fn + "_bitplane" + i + j + ".bin";
+                            // bitplane 0 masks out all the 1s
+                            // bitplane 1 masks out all the 2s
+                            // bitplane 2 masks out all the 4s etc.
+
+                            var fn2 = fp + "//" + fn + "_bitplane" + i + bp + ".bin";
                             Console.WriteLine(fn2);
                             File.Delete(fn2);
                             file = File.OpenWrite(fn2);
@@ -109,7 +113,7 @@ namespace MegaConvert
                                     {
                                         byte t = c.data[y * c.width + x]; // palette index 0-255
                                         t &= mask;
-                                        b += (byte)(t << (7-x));
+                                        b += (byte)((t >> bp) << (7-x));
                                     }
                                     file.WriteByte((byte)b);
                                 }
