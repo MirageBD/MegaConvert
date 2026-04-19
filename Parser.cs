@@ -55,7 +55,62 @@ namespace MegaConvert
 
                 Console.WriteLine("layer.restrictmode: " + layer.restrictmode);
 
-                if (layer.restrictmode == 0x03) // bitmap singlecolour/singlecolor
+                if (layer.restrictmode == 0x02) // bitmap multicolour
+                {
+                    /*
+                    var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
+                    Console.WriteLine(fn2);
+                    File.Delete(fn2);
+                    file = File.OpenWrite(fn2);
+                    var chars = rawTimanthes.layers[i].chars;
+                    foreach (var c in chars)
+                    {
+                        for (int y = 0; y < c.height; y++)
+                        {
+                            for (int x = 0; x < c.width; x++)
+                            {
+                                file.WriteByte((byte)(c.data[y * c.width + x]));
+                            }
+                        }
+                    }
+                    file.Close();
+                    */
+
+                    var fn2 = fp + "//" + fn + "_sprites" + i + ".bin";
+                    Console.WriteLine(fn2);
+                    File.Delete(fn2);
+                    file = File.OpenWrite(fn2);
+
+                    var bb = rawTimanthes.layers[i].byteBuffer;
+
+                    if (rawTimanthes.spriteMode == SpriteMode.Colour3_64wide) // assumes hires multicolour layer
+                    {
+                        for (int spr = 0; spr < bb.width / 64; spr++)
+                        {
+                            for (int y = 0; y < bb.height; y++)
+                            {
+                                for (int x = 0; x < 64; x += 8)
+                                {
+                                    byte b0 = (byte)(bb.data[y * bb.width + (spr * 64) + x + 0] + 1);
+                                    byte b1 = (byte)(bb.data[y * bb.width + (spr * 64) + x + 2] + 1);
+                                    byte b2 = (byte)(bb.data[y * bb.width + (spr * 64) + x + 4] + 1);
+                                    byte b3 = (byte)(bb.data[y * bb.width + (spr * 64) + x + 6] + 1);
+
+                                    if (b0 > 3) b0 = 0; // $10 ($11 after I added 1) is transparent, but assume everything above 3 is transparent
+                                    if (b1 > 3) b1 = 0;
+                                    if (b2 > 3) b2 = 0;
+                                    if (b3 > 3) b3 = 0;
+
+                                    byte b = (byte)((b0 << 6) + (b1 << 4) + (b2 << 2) + (b3 << 0));
+                                    file.WriteByte(b);
+                                }
+                            }
+                        }
+                    }
+
+                    file.Close();
+                }
+                else if (layer.restrictmode == 0x03) // bitmap singlecolour/singlecolor
                 {
                     var fn2 = fp + "//" + fn + "_chars" + i + ".bin";
                     Console.WriteLine(fn2);
@@ -72,6 +127,39 @@ namespace MegaConvert
                             }
                         }
                     }
+                    file.Close();
+
+                    fn2 = fp + "//" + fn + "_sprites" + i + ".bin";
+                    Console.WriteLine(fn2);
+                    File.Delete(fn2);
+                    file = File.OpenWrite(fn2);
+
+                    var bb = rawTimanthes.layers[i].byteBuffer;
+
+                    if (rawTimanthes.spriteMode == SpriteMode.Colour1_64wide) // assumes hires singlecolour layer
+                    {
+                        for (int spr = 0; spr < bb.width / 64; spr++)
+                        {
+                            for (int y = 0; y < bb.height; y++)
+                            {
+                                for (int x = 0; x < 64; x += 8)
+                                {
+                                    byte b = (byte)(
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 0]) << 7) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 1]) << 6) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 2]) << 5) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 3]) << 4) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 4]) << 3) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 5]) << 2) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 6]) << 1) +
+                                                 ((bb.data[y * bb.width + (spr * 64) + x + 7]) << 0)
+                                             );
+                                    file.WriteByte(b);
+                                }
+                            }
+                        }
+                    }
+
                     file.Close();
                 }
                 else if (layer.restrictmode == 0x17) // attribute/colour?
@@ -194,9 +282,11 @@ namespace MegaConvert
                         File.Delete(fn2);
                         file = File.OpenWrite(fn2);
 
+                        // for FCM/NCM layers, always extract sprites
+
                         var bb = rawTimanthes.layers[i].byteBuffer;
 
-                        if (rawTimanthes.spriteMode == SpriteMode.Colour256)
+                        if (rawTimanthes.spriteMode == SpriteMode.Colour16_64wide) // assumes NCM layer. 4 bits per pixel - 64/4 = 16 pixels wide
                         {
                             for (int spr = 0; spr < bb.width / 16; spr++)
                             {
@@ -208,20 +298,6 @@ namespace MegaConvert
                                                      ((bb.data[y * bb.width + (spr * 16) + x + 0]) << 4) +
                                                      ((bb.data[y * bb.width + (spr * 16) + x + 1]) << 0)
                                                  );
-                                        file.WriteByte(b);
-                                    }
-                                }
-                            }
-                        }
-                        else if (rawTimanthes.spriteMode == SpriteMode.Colour16)
-                        {
-                            for (int spr = 0; spr < bb.width / 32; spr++)
-                            {
-                                for (int y = 0; y < bb.height; y++)
-                                {
-                                    for (int x = 0; x < 32; x++)
-                                    {
-                                        byte b = (byte)(bb.data[y * bb.width + (spr * 32) + x]);
                                         file.WriteByte(b);
                                     }
                                 }

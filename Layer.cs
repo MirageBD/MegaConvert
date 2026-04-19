@@ -90,9 +90,13 @@ namespace MegaConvert
 
     public enum SpriteMode
     {
-        Default = 0,
-        Colour16 = 1,
-        Colour256 = 2
+        Default             = 0,
+        Colour16_64wide     = 1,
+        Colour3_64wide      = 2,
+        Colour1_64wide      = 3,
+        Colour16            = 4,
+        Colour3             = 5,
+        Colour1             = 6,
     }
 
     class Layer

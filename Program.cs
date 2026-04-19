@@ -37,9 +37,13 @@ namespace MegaConvert
                 Console.WriteLine("           0 = Don't");
                 Console.WriteLine("           1 = Do");
                 Console.WriteLine("    sm1:sprite mode");
-                Console.WriteLine("           0 = Default");
-                Console.WriteLine("           1 = 256 colours");
-                Console.WriteLine("           2 = 16 colours");
+                Console.WriteLine("           0 = Default                                                ");
+                Console.WriteLine("           1 = 16 colours  64 wide (assumes NCM layer exported as raw)");
+                Console.WriteLine("           2 = 3 colours   64 wide (assumes hires MC layer exported as raw)");
+                Console.WriteLine("           3 = 1 colour    64 wide (assumes hires layer exported as raw)");
+                //Console.WriteLine("           4 = 16 colours          (assumes layer is NCM)");
+                //Console.WriteLine("           5 = 1 colour            (assumes layer is hires single colour)");
+                //Console.WriteLine("           6 = 3 colours           (assumes layer is hires multicolour)");
                 return;
             }
 
@@ -133,13 +137,18 @@ namespace MegaConvert
             }
             else if (spriteModeInt == 1)
             {
-                Console.WriteLine("\nSetting spriteMode to Colour256");
-                rawTimanthes.spriteMode = SpriteMode.Colour256;
+                Console.WriteLine("\nSetting spriteMode to Colour16_64wide");
+                rawTimanthes.spriteMode = SpriteMode.Colour16_64wide;
             }
             else if (spriteModeInt == 2)
             {
-                Console.WriteLine("\nSetting spriteMode to Colour16");
-                rawTimanthes.spriteMode = SpriteMode.Colour16;
+                Console.WriteLine("\nSetting spriteMode to Colour3_64wide");
+                rawTimanthes.spriteMode = SpriteMode.Colour3_64wide;
+            }
+            else if (spriteModeInt == 3)
+            {
+                Console.WriteLine("\nSetting spriteMode to Colour1_64wide");
+                rawTimanthes.spriteMode = SpriteMode.Colour1_64wide;
             }
 
             UInt32.TryParse(charLocation, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var charLocationInt);
